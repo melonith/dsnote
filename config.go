@@ -15,10 +15,10 @@ type DSConfig struct {
 	Servers  []ServerConfig `json:"servers"`
 }
 
-func (d *DSConfig) GetServer(id string) ServerConfig {
+func (d *DSConfig) GetServer(id string) *ServerConfig {
 	for _, s := range d.Servers {
 		if s.GuildID == id {
-			return s
+			return &s
 		}
 	}
 	// If we get to this point I am assuming that we didn't find a suitable server

@@ -13,8 +13,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var config DSConfig
-var configLocation string
+var (
+	config         DSConfig
+	configLocation string
+)
 
 func saveConfig() {
 	if configLocation != "TOKEN" {
