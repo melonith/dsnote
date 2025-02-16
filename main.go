@@ -112,7 +112,7 @@ func WriteNoteToChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	messageContents := strings.TrimPrefix(m.Content, guildID.Prefix+"dsnote")
-	s.ChannelMessageSend(guildID.TargetChannel, referencedMessageLink+" "+messageContents)
+	s.ChannelMessageSend(guildID.TargetChannel, messageContents+" "+referencedMessageLink)
 	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 }
 
