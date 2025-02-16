@@ -16,9 +16,9 @@ type DSConfig struct {
 }
 
 func (d *DSConfig) GetServer(id string) *ServerConfig {
-	for _, s := range d.Servers {
-		if s.GuildID == id {
-			return &s
+	for i := range d.Servers {
+		if d.Servers[i].GuildID == id {
+			return &d.Servers[i]
 		}
 	}
 	// If we get to this point I am assuming that we didn't find a suitable server
@@ -28,5 +28,5 @@ func (d *DSConfig) GetServer(id string) *ServerConfig {
 		GuildID: id,
 	}
 	d.Servers = append(d.Servers, newServer)
-	return d.GetServer(id)
+	return &d.Servers[len(d.Servers)-1]
 }

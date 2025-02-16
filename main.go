@@ -97,7 +97,6 @@ func SetTargetChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guild := config.GetServer(m.GuildID)
 	userMessageSplit := strings.Split(m.Content, " ")
 	guild.SetTargetChannel(strings.TrimPrefix(strings.TrimSuffix(userMessageSplit[1], ">"), "<#"))
-	fmt.Println("Target channel set to: " + guild.TargetChannel)
 	s.ChannelMessageSend(m.ChannelID, "Set target notes channel to <#"+guild.TargetChannel+">")
 	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 }
@@ -105,7 +104,6 @@ func SetTargetChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 func WriteNoteToChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guildID := config.GetServer(m.GuildID)
 
-	fmt.Println("Writing to target channel: " + guildID.TargetChannel)
 	var referencedMessageLink string
 	if m.Message.ReferencedMessage != nil {
 		referenceID := m.Message.ReferencedMessage.ID
