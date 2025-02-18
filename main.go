@@ -95,11 +95,47 @@ func main() {
 
 func SetTargetChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guild := config.GetServer(m.GuildID)
-	userMessageSplit := strings.Split(m.Content, " ")
-	guild.SetTargetChannel(strings.TrimPrefix(strings.TrimSuffix(userMessageSplit[1], ">"), "<#"))
-	s.ChannelMessageSend(m.ChannelID, "Set target notes channel to <#"+guild.TargetChannel+">")
-	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	userMessageContent := strings.TrimSpace(strings.TrimPrefix(m.Content, guild.Prefix+"set_target_channel"))
+	if len(userMessageContent) > 0 {
+		targetChannel := strings.TrimPrefix(strings.TrimSuffix(userMessageContent, ">"), "<#")
+		guild.SetTargetChannel(targetChannel)
+		s.ChannelMessageSend(m.ChannelID, "Set target notes channel to <#"+targetChannel+">")
+		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	} else {
+		s.ChannelMessageSend(m.ChannelID, "Couldn't set target channel, did you supply one?")
+	}
 }
+
+func DeleteMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Message.ReferencedMessage != nil {
+		s.ChannelMessageDelete(m.Message.ReferencedMessage.ChannelID, m.Message.ReferencedMessage.ID)
+		s.ChannelMessageDelete(m.Message.ChannelID, m.Message.ID)
+	}
+}
+
+func EditMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	guild := config.GetServer(m.GuildID)
+	messageContent := strings.TrimSpace(strings.TrimPrefix(m.Content, guild.Prefix+"dsedit"))
+	if len(messageContent) > 0 {
+		if m.Message.ReferencedMessage != nil {
+			_, err := s.ChannelMessageEdit(
+				m.ReferencedMessage.ChannelID,
+				m.ReferencedMessage.ID,
+				messageContent)
+			if err != nil {
+				userChannel, err := s.UserChannelCreate(m.Author.ID)
+				if err != nil {
+					fmt.Println("Oops unable to send message.")
+					return
+				}
+				s.ChannelMessageSend(userChannel.ID, "Unable to edit requested message.")
+			}
+		}
+		s.ChannelMessageDelete(m.Message.ChannelID, m.Message.ID)
+	}
+}
+
+
 
 func WriteNoteToChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guildID := config.GetServer(m.GuildID)
@@ -111,9 +147,11 @@ func WriteNoteToChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 		referencedMessageLink = "https://discordapp.com/channels/" + guildID.GuildID + "/" + channelID + "/" + referenceID
 	}
 
-	messageContents := strings.TrimPrefix(m.Content, guildID.Prefix+"dsnote")
-	s.ChannelMessageSend(guildID.TargetChannel, messageContents+" "+referencedMessageLink)
-	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	messageContents := strings.TrimSpace(strings.TrimPrefix(m.Content, guildID.Prefix+"dsnote"))
+	if len(messageContents) > 0 {
+		s.ChannelMessageSend(guildID.TargetChannel, messageContents+" "+referencedMessageLink)
+		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	}
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -127,6 +165,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(strings.ToLower(m.Content), "!dsnote") {
 		WriteNoteToChannel(s, m)
+	}
+
+	if strings.HasPrefix(strings.ToLower(m.Content), "!dsedit") {
+		EditMessage(s, m)
+	}
+
+	if strings.HasPrefix(strings.ToLower(m.Content), "!dskill") {
+		DeleteMessage(s, m)
 	}
 
 	if m.Content == "ping" {
